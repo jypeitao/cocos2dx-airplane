@@ -1,21 +1,25 @@
 #include "GameLayer.h"
-#include "Enemy.h"
+//#include "Enemy.h"
 
+Level GameLayer::s_level = EASY;
 
-Level GameLayer::level=EASY;
+GameLayer::GameLayer(void) :
 
-GameLayer::GameLayer(void)
+                _background1(NULL),
+                _background2(NULL),
+                _planeLayer(NULL),
+                _bulletLayer(NULL),
+                _mutiBulletsLayer(NULL),
+                _controlLayer(NULL),
+                _ufoLayer(NULL),
+                _enemyLayer(NULL),
+                _menuBigBoom(NULL),
+                _bigBoomCountItem(NULL),
+                _score(0),
+                _bigBoomCount(0)
+
 {
-	background1=NULL;
-	background2=NULL;
-	planeLayer=NULL;
-	bulletLayer=NULL;
-	mutiBulletsLayer=NULL;
-	controlLayer=NULL;
-	enemyLayer=NULL;
 
-	score=0;
-	bigBoomCount=0;
 }
 
 GameLayer::~GameLayer(void)
@@ -24,566 +28,596 @@ GameLayer::~GameLayer(void)
 
 bool GameLayer::init()
 {
-	bool bRet=false;
-	do 
-	{
-		CC_BREAK_IF(!CCLayer::init());
+    bool bRet = false;
+    do
+    {
+        CC_BREAK_IF(!Layer::init());
 
-		//��ʼ��level
-		level=EASY;
+        s_level = EASY;
 
-		//����background Music
-		if (!CocosDenshion::SimpleAudioEngine::sharedEngine()->isBackgroundMusicPlaying())
-		{
-			CocosDenshion::SimpleAudioEngine::sharedEngine()->playBackgroundMusic("sound/game_music.mp3",true);
-		}
+        if (!CocosDenshion::SimpleAudioEngine::getInstance()->isBackgroundMusicPlaying())
+        {
+            CocosDenshion::SimpleAudioEngine::getInstance()->playBackgroundMusic(
+                    "sound/game_music.mp3", true);
+        }
 
-		//����background1
-		background1=CCSprite::createWithSpriteFrame(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName("background.png"));
-		background1->setAnchorPoint(ccp(0,0));
-		background1->setPosition(ccp(0,0));
-		this->addChild(background1);
+        _background1 = Sprite::createWithSpriteFrame(
+                SpriteFrameCache::getInstance()->getSpriteFrameByName("background.png"));
+        _background1->setAnchorPoint(Point(0, 0));
+        _background1->setPosition(Point(0, 0));
+        this->addChild(_background1);
 
-		//����background2
-		background2=CCSprite::createWithSpriteFrame(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName("background.png"));
-		background2->setAnchorPoint(ccp(0,0));
-		background2->setPosition(ccp(0,background2->getContentSize().height-2));
-		this->addChild(background2);
+        _background2 = Sprite::createWithSpriteFrame(
+                SpriteFrameCache::getInstance()->getSpriteFrameByName("background.png"));
+        _background2->setAnchorPoint(Point(0, 0));
+        _background2->setPosition(Point(0, _background1->getPositionY()+_background1->getContentSize().height -4));
+        this->addChild(_background2);
 
-		//����planeLayer
-		this->planeLayer=PlaneLayer::create();
-		this->addChild(planeLayer);
+        this->_planeLayer = PlaneLayer::create();
+        this->addChild(_planeLayer);
 
-		//����bulletLayer
-		this->bulletLayer=BulletLayer::create();
-		this->addChild(bulletLayer);
-		this->bulletLayer->StartShoot();
+        this->_bulletLayer = BulletLayer::create();
+        this->addChild(_bulletLayer);
+        this->_bulletLayer->StartShoot();
 
-		//����mutiBulletsLayer
-		this->mutiBulletsLayer=MutiBulletsLayer::create();
-		this->addChild(mutiBulletsLayer);
+        this->_mutiBulletsLayer = MutiBulletsLayer::create();
+        this->addChild(_mutiBulletsLayer);
+//
+        this->_enemyLayer = EnemyLayer::create();
+        this->addChild(_enemyLayer);
 
-		//����enemyLayer
-		this->enemyLayer=EnemyLayer::create();
-		this->addChild(enemyLayer);
+        this->_controlLayer = ControlLayer::create();
+        this->addChild(_controlLayer);
+//
+        this->_ufoLayer = UFOLayer::create();
+        this->addChild(_ufoLayer);
 
-		//����controlLayer
-		this->controlLayer=ControlLayer::create();
-		this->addChild(controlLayer);
+        auto touchListener = EventListenerTouchOneByOne::create();
+        touchListener->setSwallowTouches(true);
 
-		//����UFOLayer
-		this->ufoLayer=UFOLayer::create();
-		this->addChild(ufoLayer);
+        touchListener->onTouchBegan = CC_CALLBACK_2(GameLayer::onTouchBegan, this);
+        touchListener->onTouchMoved = CC_CALLBACK_2(GameLayer::onTouchMoved, this);
+        touchListener->onTouchEnded = CC_CALLBACK_2(GameLayer::onTouchEnded, this);
 
-		//���ÿɴ���
-		this->setTouchEnabled(true);
+        getEventDispatcher()->addEventListenerWithSceneGraphPriority(touchListener, this);
 
-		//ִ������ƻ�
-		this->schedule(schedule_selector(GameLayer::backgroundMove),0.01f);
+        this->schedule(schedule_selector(GameLayer::backgroundMove),0.01f);
 
-		//��ײ���
-		this->scheduleUpdate();
+        this->scheduleUpdate();
 
-		//���ð�����Ч
-		this->setKeypadEnabled(true);
+        auto keyListener = EventListenerKeyboard::create();
+        keyListener->onKeyReleased = CC_CALLBACK_2(GameLayer::onKeyReleased,this);
+        getEventDispatcher()->addEventListenerWithSceneGraphPriority(keyListener, this);
 
-		bRet=true;
-	} while (0);
-	return bRet;
+        bRet = true;
+    } while (0);
+    return bRet;
 }
 
-//��������
 void GameLayer::backgroundMove(float dt)
 {
-	background1->setPositionY(background1->getPositionY()-2);
-	background2->setPositionY(background1->getPositionY()+background1->getContentSize().height-2);
-	if (background2->getPositionY()==0)
-	{
-		background1->setPositionY(0);
-	}
+    _background1->setPositionY(_background1->getPositionY() - 2);
+    _background2->setPositionY(
+            _background1->getPositionY() + _background1->getContentSize().height -4);
+    if (_background2->getPositionY() < 0.001)
+    {
+        _background1->setPositionY(0);
+    }
 }
 
-bool GameLayer::ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent)
+void GameLayer::onKeyReleased(EventKeyboard::KeyCode keyCode, Event* event)
 {
-	return true;
+    if (keyCode == EventKeyboard::KeyCode::KEY_BACKSPACE)
+    {
+        Director::getInstance()->end();
+    }
+    else if (keyCode == EventKeyboard::KeyCode::KEY_MENU)
+    {
+        //_label->setString("MENU clicked!");
+    }
+
 }
 
-void GameLayer::ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent)
+bool GameLayer::onTouchBegan(Touch* touch, Event* event)
 {
-	if (this->planeLayer->isAlive)
-	{
-		CCPoint beginPoint=pTouch->getLocationInView(); 
-		beginPoint=CCDirector::sharedDirector()->convertToGL(beginPoint); 
-		//juggle the area of drag 
-		CCRect planeRect=this->planeLayer->getChildByTag(AIRPLANE)->boundingBox();
-		planeRect.origin.x-=15;
-		planeRect.origin.y-=15;
-		planeRect.size.width+=30;
-		planeRect.size.height+=30;
-		if(planeRect.containsPoint(this->getParent()->convertTouchToNodeSpace(pTouch))) 
-		{ 
-			CCPoint endPoint=pTouch->getPreviousLocationInView(); 
-			endPoint=CCDirector::sharedDirector()->convertToGL(endPoint); 
-
-			CCPoint offSet =ccpSub(beginPoint,endPoint);
-			CCPoint toPoint=ccpAdd(this->planeLayer->getChildByTag(AIRPLANE)->getPosition(),offSet); 
-			this->planeLayer->MoveTo(toPoint); 
-		} 
-	}
+    log("onTouchBegan");
+//    if (!getBoundingBox().containsPoint(convertTouchToNodeSpace(touch)))
+//    {
+//        return false;
+//    }
+    return true;
 }
 
-void GameLayer::ccTouchEnded(CCTouch *pTouch, CCEvent *pEvent)
+void GameLayer::onTouchMoved(Touch* touch, Event* event)
 {
-	
+    log("onTouchMoved");
+    if (this->_planeLayer->_isAlive)
+    {
+        Point beginPoint = touch->getLocationInView();
+        beginPoint = Director::getInstance()->convertToGL(beginPoint);
+        //juggle the area of drag
+        Rect planeRect = this->_planeLayer->getChildByTag(AIRPLANE)->getBoundingBox();
+        planeRect.origin.x -= 30;
+        planeRect.origin.y -= 30;
+        planeRect.size.width += 60;
+        planeRect.size.height += 60;
+        if (planeRect.containsPoint(this->getParent()->convertTouchToNodeSpace(touch)))
+        {
+            Point endPoint = touch->getPreviousLocationInView();
+            endPoint = Director::getInstance()->convertToGL(endPoint);
+
+            Point offSet = beginPoint - endPoint;
+            Point toPoint = this->_planeLayer->getChildByTag(AIRPLANE)->getPosition() + offSet;
+            this->_planeLayer->MoveTo(toPoint);
+        }
+    }
 }
 
-void GameLayer::registerWithTouchDispatcher()
+void GameLayer::onTouchEnded(Touch* touch, Event* event)
 {
-	CCDirector *pDirector=CCDirector::sharedDirector();
-	//pDirector->getTouchDispatcher()->addTargetedDelegate(this,0,true);
+
 }
 
 void GameLayer::update(float dt)
 {
-	if (level==EASY && score>=1000000)
-	{
-		level=MIDDLE;
-	}
-	else if (level==MIDDLE && score>=2000000)
-	{
-		level=HARD;
-	}
+    if (s_level == EASY && _score >= 1000000)
+    {
+        s_level = MIDDLE;
+    }
+    else if (s_level == MIDDLE && _score >= 2000000)
+    {
+        s_level = HARD;
+    }
 
-	CCArray* bulletsToDelete=CCArray::create();
-	bulletsToDelete->retain();
-	CCObject* bt,*et,*ut;
+    __Array* bulletsToDelete = __Array::create();
+    bulletsToDelete->retain();
+    Object* bt, *et, *ut;
 
-	//enemy1 & bullet CheckCollosion
-	CCARRAY_FOREACH(this->bulletLayer->m_pAllBullet,bt)
-	{
-		CCSprite* bullet=(CCSprite*)bt;
-		
-		CCArray* enemy1sToDelete=CCArray::create();
-		enemy1sToDelete->retain();
-		int a=this->enemyLayer->m_pAllEnemy1->capacity();
-		CCARRAY_FOREACH(this->enemyLayer->m_pAllEnemy1,et)
-		{
-			Enemy* enemy1=(Enemy*)et;
-			if (bullet->boundingBox().intersectsRect(enemy1->getBoundingBox()))
-			{
-				if (enemy1->getLife()==1)
-				{
-					enemy1->loseLife();
-					bulletsToDelete->addObject(bullet);
-					enemy1sToDelete->addObject(enemy1);
-					score+=ENEMY1_SCORE;
-					this->controlLayer->updateScore(score);
-				}
-				else ;
-			}
-		}
-		CCARRAY_FOREACH(enemy1sToDelete,et)
-		{
-			Enemy* enemy1=(Enemy*)et;
-			this->enemyLayer->enemy1Blowup(enemy1);
-		}
-		enemy1sToDelete->release();
-	}
-	CCARRAY_FOREACH(bulletsToDelete,bt)
-	{
-		CCSprite* bullet=(CCSprite*)bt;
-		this->bulletLayer->RemoveBullet(bullet);
-	}
-	bulletsToDelete->removeAllObjects();
+    //enemy1 & bullet CheckCollosion
+    CCARRAY_FOREACH(this->_bulletLayer->_allBullet,bt)
+    {
+        Sprite* bullet = (Sprite*) bt;
 
-	//enemy2 & bullet CheckCollosion
-	CCARRAY_FOREACH(this->bulletLayer->m_pAllBullet,bt)
-	{
-		CCSprite* bullet=(CCSprite*)bt;
+        __Array* enemy1sToDelete = __Array::create();
+        enemy1sToDelete->retain();
+        //int a = this->_enemyLayer->_pAllEnemy1->capacity();
+        CCARRAY_FOREACH(this->_enemyLayer->_pAllEnemy1,et)
+        {
+            Enemy* enemy1 = (Enemy*) et;
+            if (bullet->getBoundingBox().intersectsRect(enemy1->getBoundingBox()))
+            {
+                if (enemy1->getLife() == 1)
+                {
+                    enemy1->loseLife();
+                    bulletsToDelete->addObject(bullet);
+                    enemy1sToDelete->addObject(enemy1);
+                    _score += ENEMY1_SCORE;
+                    this->_controlLayer->updateScore(_score);
+                }
+                else
+                {
+                    //do nothing
+                }
+            }
+        }
+        CCARRAY_FOREACH(enemy1sToDelete,et)
+        {
+            Enemy* enemy1 = (Enemy*) et;
+            this->_enemyLayer->enemy1Blowup(enemy1);
+        }
+        enemy1sToDelete->release();
+    }
+    CCARRAY_FOREACH(bulletsToDelete,bt)
+    {
+        Sprite* bullet = (Sprite*) bt;
+        this->_bulletLayer->RemoveBullet(bullet);
+    }
+    bulletsToDelete->removeAllObjects();
 
-		CCArray* enemy2sToDelete=CCArray::create();
-		enemy2sToDelete->retain();
-		CCARRAY_FOREACH(this->enemyLayer->m_pAllEnemy2,et)
-		{
-			Enemy* enemy2=(Enemy*)et;
-			if (bullet->boundingBox().intersectsRect(enemy2->getBoundingBox()))
-			{
-				if (enemy2->getLife()>1)
-				{
-					enemy2->loseLife();
-					bulletsToDelete->addObject(bullet);
-				}
-				else if(enemy2->getLife()==1)
-				{
-					enemy2->loseLife();
-					bulletsToDelete->addObject(bullet);
-					enemy2sToDelete->addObject(enemy2);
-					score+=ENEMY2_SCORE;
-					this->controlLayer->updateScore(score);
-				}
-				else ;
-			}
-		}
-		CCARRAY_FOREACH(enemy2sToDelete,et)
-		{
-			Enemy* enemy2=(Enemy*)et;
-			this->enemyLayer->enemy2Blowup(enemy2);
-		}
-		enemy2sToDelete->release();
-	}
-	CCARRAY_FOREACH(bulletsToDelete,bt)
-	{
-		CCSprite* bullet=(CCSprite*)bt;
-		this->bulletLayer->RemoveBullet(bullet);
-	}
-	bulletsToDelete->removeAllObjects();
+    //enemy2 & bullet CheckCollosion
+    CCARRAY_FOREACH(this->_bulletLayer->_allBullet,bt)
+    {
+        Sprite* bullet = (Sprite*) bt;
 
-	//enemy3 & bullet CheckCollosion
-	CCARRAY_FOREACH(this->bulletLayer->m_pAllBullet,bt)
-	{
-		CCSprite* bullet=(CCSprite*)bt;
+        __Array* enemy2sToDelete = __Array::create();
+        enemy2sToDelete->retain();
+        CCARRAY_FOREACH(this->_enemyLayer->_pAllEnemy2,et)
+        {
+            Enemy* enemy2 = (Enemy*) et;
+            if (bullet->getBoundingBox().intersectsRect(enemy2->getBoundingBox()))
+            {
+                if (enemy2->getLife() > 1)
+                {
+                    enemy2->loseLife();
+                    bulletsToDelete->addObject(bullet);
+                }
+                else if (enemy2->getLife() == 1)
+                {
+                    enemy2->loseLife();
+                    bulletsToDelete->addObject(bullet);
+                    enemy2sToDelete->addObject(enemy2);
+                    _score += ENEMY2_SCORE;
+                    this->_controlLayer->updateScore(_score);
+                }
+                else
+                {
+                    //do nothing
+                }
 
-		CCArray* enemy3sToDelete=CCArray::create();
-		enemy3sToDelete->retain();
-		CCARRAY_FOREACH(this->enemyLayer->m_pAllEnemy3,et)
-		{
-			Enemy* enemy3=(Enemy*)et;
-			if (bullet->boundingBox().intersectsRect(enemy3->getBoundingBox()))
-			{
-				//���life>1,�Ƴ�bullet
-				if (enemy3->getLife()>1)
-				{
-					enemy3->loseLife();
-					bulletsToDelete->addObject(bullet);
-				}
-				//���life==1,�Ƴ�enemy3
-				else if(enemy3->getLife()==1)
-				{
-					enemy3->loseLife();
-					bulletsToDelete->addObject(bullet);
-					enemy3sToDelete->addObject(enemy3);
-					score+=ENEMY3_SCORE;
-					this->controlLayer->updateScore(score);
-				}
-				//��ʱ����animate�׶�,��������
-				else ;
-			}
-		}
-		CCARRAY_FOREACH(enemy3sToDelete,et)
-		{
-			Enemy* enemy3=(Enemy*)et;
-			this->enemyLayer->enemy3Blowup(enemy3);
-		}
-		enemy3sToDelete->release();
-	}
-	CCARRAY_FOREACH(bulletsToDelete,bt)
-	{
-		CCSprite* bullet=(CCSprite*)bt;
-		this->bulletLayer->RemoveBullet(bullet);
-	}
-	bulletsToDelete->removeAllObjects();
-	bulletsToDelete->release();
+            }
+        }
+        CCARRAY_FOREACH(enemy2sToDelete,et)
+        {
+            Enemy* enemy2 = (Enemy*) et;
+            this->_enemyLayer->enemy2Blowup(enemy2);
+        }
+        enemy2sToDelete->release();
+    }
+    CCARRAY_FOREACH(bulletsToDelete,bt)
+    {
+        Sprite* bullet = (Sprite*) bt;
+        this->_bulletLayer->RemoveBullet(bullet);
+    }
+    bulletsToDelete->removeAllObjects();
 
+    //enemy3 & bullet CheckCollosion
+    CCARRAY_FOREACH(this->_bulletLayer->_allBullet,bt)
+    {
+        Sprite* bullet = (Sprite*) bt;
 
-	CCArray* mutiBulletsToDelete=CCArray::create();
-	mutiBulletsToDelete->retain();
-	CCObject* mbt;
+        __Array* enemy3sToDelete = __Array::create();
+        enemy3sToDelete->retain();
+        CCARRAY_FOREACH(this->_enemyLayer->_pAllEnemy3,et)
+        {
+            Enemy* enemy3 = (Enemy*) et;
+            if (bullet->getBoundingBox().intersectsRect(enemy3->getBoundingBox()))
+            {
+                if (enemy3->getLife() > 1)
+                {
+                    enemy3->loseLife();
+                    bulletsToDelete->addObject(bullet);
+                }
+                else if (enemy3->getLife() == 1)
+                {
+                    enemy3->loseLife();
+                    bulletsToDelete->addObject(bullet);
+                    enemy3sToDelete->addObject(enemy3);
+                    _score += ENEMY3_SCORE;
+                    this->_controlLayer->updateScore(_score);
+                }
+                else
+                {
+                    //do nothing
+                }
 
-	////enemy1 & mutiBullets CheckCollosion
-	CCARRAY_FOREACH(this->mutiBulletsLayer->m_pAllMutiBullets,mbt)
-	{
-		CCSprite* mutiBullets=(CCSprite*)mbt;
+            }
+        }
+        CCARRAY_FOREACH(enemy3sToDelete,et)
+        {
+            Enemy* enemy3 = (Enemy*) et;
+            this->_enemyLayer->enemy3Blowup(enemy3);
+        }
+        enemy3sToDelete->release();
+    }
+    CCARRAY_FOREACH(bulletsToDelete,bt)
+    {
+        Sprite* bullet = (Sprite*) bt;
+        this->_bulletLayer->RemoveBullet(bullet);
+    }
+    bulletsToDelete->removeAllObjects();
+    bulletsToDelete->release();
 
-		CCArray* enemy1sToDelete=CCArray::create();
-		enemy1sToDelete->retain();
-		CCARRAY_FOREACH(this->enemyLayer->m_pAllEnemy1,et)
-		{
-			Enemy* enemy1=(Enemy*)et;
-			if (mutiBullets->boundingBox().intersectsRect(enemy1->getBoundingBox()))
-			{
-				if (enemy1->getLife()==1)
-				{
-					enemy1->loseLife();
-					mutiBulletsToDelete->addObject(mutiBullets);
-					enemy1sToDelete->addObject(enemy1);
-					score+=ENEMY1_SCORE;
-					this->controlLayer->updateScore(score);
-				}
-				else ;
-			}
-		}
-		CCARRAY_FOREACH(enemy1sToDelete,et)
-		{
-			Enemy* enemy1=(Enemy*)et;
-			this->enemyLayer->enemy1Blowup(enemy1);
-		}
-		enemy1sToDelete->release();
-	}
-	CCARRAY_FOREACH(mutiBulletsToDelete,mbt)
-	{
-		CCSprite* mutiBullets=(CCSprite*)mbt;
-		this->mutiBulletsLayer->RemoveMutiBullets(mutiBullets);
-	}
-	mutiBulletsToDelete->removeAllObjects();
+    __Array* mutiBulletsToDelete = __Array::create();
+    mutiBulletsToDelete->retain();
+    Object* mbt;
 
-	//enemy2 & mutiBullets CheckCollosion
-	CCARRAY_FOREACH(this->mutiBulletsLayer->m_pAllMutiBullets,mbt)
-	{
-		CCSprite* mutiBullets=(CCSprite*)mbt;
+    ////enemy1 & mutiBullets CheckCollosion
+    CCARRAY_FOREACH(this->_mutiBulletsLayer->_allMutiBullets,mbt)
+    {
+        Sprite* mutiBullets = (Sprite*) mbt;
 
-		CCArray* enemy2sToDelete=CCArray::create();
-		enemy2sToDelete->retain();
-		CCARRAY_FOREACH(this->enemyLayer->m_pAllEnemy2,et)
-		{
-			Enemy* enemy2=(Enemy*)et;
-			if (mutiBullets->boundingBox().intersectsRect(enemy2->getBoundingBox()))
-			{
-				if (enemy2->getLife()>1)
-				{
-					enemy2->loseLife();
-					mutiBulletsToDelete->addObject(mutiBullets);
-				}
-				else if(enemy2->getLife()==1)
-				{
-					enemy2->loseLife();
-					mutiBulletsToDelete->addObject(mutiBullets);
-					enemy2sToDelete->addObject(enemy2);
-					score+=ENEMY2_SCORE;
-					this->controlLayer->updateScore(score);
-				}
-				else ;
-			}
-		}
-		CCARRAY_FOREACH(enemy2sToDelete,et)
-		{
-			Enemy* enemy2=(Enemy*)et;
-			this->enemyLayer->enemy2Blowup(enemy2);
-		}
-		enemy2sToDelete->release();
-	}
-	CCARRAY_FOREACH(mutiBulletsToDelete,mbt)
-	{
-		CCSprite* mutiBullets=(CCSprite*)mbt;
-		this->mutiBulletsLayer->RemoveMutiBullets(mutiBullets);
-	}
-	mutiBulletsToDelete->removeAllObjects();
+        __Array* enemy1sToDelete = __Array::create();
+        enemy1sToDelete->retain();
+        CCARRAY_FOREACH(this->_enemyLayer->_pAllEnemy1,et)
+        {
+            Enemy* enemy1 = (Enemy*) et;
+            if (mutiBullets->getBoundingBox().intersectsRect(enemy1->getBoundingBox()))
+            {
+                if (enemy1->getLife() == 1)
+                {
+                    enemy1->loseLife();
+                    mutiBulletsToDelete->addObject(mutiBullets);
+                    enemy1sToDelete->addObject(enemy1);
+                    _score += ENEMY1_SCORE;
+                    this->_controlLayer->updateScore(_score);
+                }
+                else
+                {
+                    //do nothing
+                }
+            }
+        }
+        CCARRAY_FOREACH(enemy1sToDelete,et)
+        {
+            Enemy* enemy1 = (Enemy*) et;
+            this->_enemyLayer->enemy1Blowup(enemy1);
+        }
+        enemy1sToDelete->release();
+    }
+    CCARRAY_FOREACH(mutiBulletsToDelete,mbt)
+    {
+        Sprite* mutiBullets = (Sprite*) mbt;
+        this->_mutiBulletsLayer->RemoveMutiBullets(mutiBullets);
+    }
+    mutiBulletsToDelete->removeAllObjects();
 
-	//enemy3 & mutiBullets CheckCollosion
-	CCARRAY_FOREACH(this->mutiBulletsLayer->m_pAllMutiBullets,mbt)
-	{
-		CCSprite* mutiBullets=(CCSprite*)mbt;
+    //enemy2 & mutiBullets CheckCollosion
+    CCARRAY_FOREACH(this->_mutiBulletsLayer->_allMutiBullets,mbt)
+    {
+        Sprite* mutiBullets = (Sprite*) mbt;
 
-		CCArray* enemy3sToDelete=CCArray::create();
-		enemy3sToDelete->retain();
-		CCARRAY_FOREACH(this->enemyLayer->m_pAllEnemy3,et)
-		{
-			Enemy* enemy3=(Enemy*)et;
-			if (mutiBullets->boundingBox().intersectsRect(enemy3->getBoundingBox()))
-			{
-				//���life>1,�Ƴ�bullet
-				if (enemy3->getLife()>1)
-				{
-					enemy3->loseLife();
-					mutiBulletsToDelete->addObject(mutiBullets);
-				}
-				//���life==1,�Ƴ�enemy3
-				else if(enemy3->getLife()==1)
-				{
-					enemy3->loseLife();
-					mutiBulletsToDelete->addObject(mutiBullets);
-					enemy3sToDelete->addObject(enemy3);
-					score+=ENEMY3_SCORE;
-					this->controlLayer->updateScore(score);
-				}
-				//��ʱ����animate�׶�,��������
-				else ;
-			}
-		}
-		CCARRAY_FOREACH(enemy3sToDelete,et)
-		{
-			Enemy* enemy3=(Enemy*)et;
-			this->enemyLayer->enemy3Blowup(enemy3);
-		}
-		enemy3sToDelete->release();
-	}
-	CCARRAY_FOREACH(mutiBulletsToDelete,mbt)
-	{
-		CCSprite* mutiBullets=(CCSprite*)mbt;
-		this->mutiBulletsLayer->RemoveMutiBullets(mutiBullets);
-	}
-	mutiBulletsToDelete->removeAllObjects();
-	mutiBulletsToDelete->release();
+        __Array* enemy2sToDelete = __Array::create();
+        enemy2sToDelete->retain();
+        CCARRAY_FOREACH(this->_enemyLayer->_pAllEnemy2,et)
+        {
+            Enemy* enemy2 = (Enemy*) et;
+            if (mutiBullets->getBoundingBox().intersectsRect(enemy2->getBoundingBox()))
+            {
+                if (enemy2->getLife() > 1)
+                {
+                    enemy2->loseLife();
+                    mutiBulletsToDelete->addObject(mutiBullets);
+                }
+                else if (enemy2->getLife() == 1)
+                {
+                    enemy2->loseLife();
+                    mutiBulletsToDelete->addObject(mutiBullets);
+                    enemy2sToDelete->addObject(enemy2);
+                    _score += ENEMY2_SCORE;
+                    this->_controlLayer->updateScore(_score);
+                }
+                else
+                {
+                    //do nothing
+                }
 
+            }
+        }
+        CCARRAY_FOREACH(enemy2sToDelete,et)
+        {
+            Enemy* enemy2 = (Enemy*) et;
+            this->_enemyLayer->enemy2Blowup(enemy2);
+        }
+        enemy2sToDelete->release();
+    }
+    CCARRAY_FOREACH(mutiBulletsToDelete,mbt)
+    {
+        Sprite* mutiBullets = (Sprite*) mbt;
+        this->_mutiBulletsLayer->RemoveMutiBullets(mutiBullets);
+    }
+    mutiBulletsToDelete->removeAllObjects();
 
-	CCRect airplaneRect=this->planeLayer->getChildByTag(AIRPLANE)->boundingBox();
-	airplaneRect.origin.x+=30;
-	airplaneRect.size.width-=60;
-	//enemy1 & airplane CheckCollosion
-	CCARRAY_FOREACH(this->enemyLayer->m_pAllEnemy1,et)
-	{
-		Enemy* enemy1=(Enemy*)et;
-		if (enemy1->getLife()>0)
-		{
-			if (airplaneRect.intersectsRect(enemy1->getBoundingBox()))
-			{
-				//ж����������ƻ�
-				this->unscheduleAllSelectors();
-				this->bulletLayer->StopShoot();
-				this->mutiBulletsLayer->StopShoot();
-				this->planeLayer->Blowup(score);
-				return;
-			}
-		}
-	}
+    //enemy3 & mutiBullets CheckCollosion
+    CCARRAY_FOREACH(this->_mutiBulletsLayer->_allMutiBullets,mbt)
+    {
+        Sprite* mutiBullets = (Sprite*) mbt;
 
-	//enemy2 & airplane CheckCollosion
-	CCARRAY_FOREACH(this->enemyLayer->m_pAllEnemy2,et)
-	{
-		Enemy* enemy2=(Enemy*)et;
-		if (enemy2->getLife()>0)
-		{
-			if (airplaneRect.intersectsRect(enemy2->getBoundingBox()))
-			{
-				//ж����������ƻ�
-				this->unscheduleAllSelectors();
-				this->bulletLayer->StopShoot();
-				this->mutiBulletsLayer->StopShoot();
-				this->planeLayer->Blowup(score);
-				return;
-			}
-		}
-	}
+        __Array* enemy3sToDelete = __Array::create();
+        enemy3sToDelete->retain();
+        CCARRAY_FOREACH(this->_enemyLayer->_pAllEnemy3,et)
+        {
+            Enemy* enemy3 = (Enemy*) et;
+            if (mutiBullets->getBoundingBox().intersectsRect(enemy3->getBoundingBox()))
+            {
+                 if (enemy3->getLife() > 1)
+                {
+                    enemy3->loseLife();
+                    mutiBulletsToDelete->addObject(mutiBullets);
+                }
+                else if (enemy3->getLife() == 1)
+                {
+                    enemy3->loseLife();
+                    mutiBulletsToDelete->addObject(mutiBullets);
+                    enemy3sToDelete->addObject(enemy3);
+                    _score += ENEMY3_SCORE;
+                    this->_controlLayer->updateScore(_score);
+                }
+                else
+                {
+                    //do nothing
+                }
+            }
+        }
+        CCARRAY_FOREACH(enemy3sToDelete,et)
+        {
+            Enemy* enemy3 = (Enemy*) et;
+            this->_enemyLayer->enemy3Blowup(enemy3);
+        }
+        enemy3sToDelete->release();
+    }
+    CCARRAY_FOREACH(mutiBulletsToDelete,mbt)
+    {
+        Sprite* mutiBullets = (Sprite*) mbt;
+        this->_mutiBulletsLayer->RemoveMutiBullets(mutiBullets);
+    }
+    mutiBulletsToDelete->removeAllObjects();
+    mutiBulletsToDelete->release();
 
-	//enemy3 & airplane CheckCollosion
-	CCARRAY_FOREACH(this->enemyLayer->m_pAllEnemy3,et)
-	{
-		Enemy* enemy3=(Enemy*)et;
-		if (enemy3->getLife()>0)
-		{
-			if (airplaneRect.intersectsRect(enemy3->getBoundingBox()))
-			{
-				//ж����������ƻ�
-				this->unscheduleAllSelectors();
-				this->bulletLayer->StopShoot();
-				this->mutiBulletsLayer->StopShoot();
-				this->planeLayer->Blowup(score);
-				return;
-			}
-		}
-	}
+    Rect airplaneRect = this->_planeLayer->getChildByTag(AIRPLANE)->getBoundingBox();
+    airplaneRect.origin.x += 30;
+    airplaneRect.size.width -= 60;
+    //enemy1 & airplane CheckCollosion
+    CCARRAY_FOREACH(this->_enemyLayer->_pAllEnemy1,et)
+    {
+        Enemy* enemy1 = (Enemy*) et;
+        if (enemy1->getLife() > 0)
+        {
+            if (airplaneRect.intersectsRect(enemy1->getBoundingBox()))
+            {
+                this->unscheduleAllSelectors();
+                this->_bulletLayer->StopShoot();
+                this->_mutiBulletsLayer->StopShoot();
+                this->_planeLayer->Blowup(_score);
+                return;
+            }
+        }
+    }
 
-	//mutiBullets & airplane CheckCollision
-	CCARRAY_FOREACH(this->ufoLayer->m_pAllMutiBullets,ut)
-	{
-		CCSprite* mutiBullets=(CCSprite*)ut;
-		if (this->planeLayer->getChildByTag(AIRPLANE)->boundingBox().intersectsRect(mutiBullets->boundingBox()))
-		{
-			CocosDenshion::SimpleAudioEngine::sharedEngine()->playEffect("sound/get_double_laser.mp3");
-			this->ufoLayer->RemoveMutiBullets(mutiBullets);
-			this->bulletLayer->StopShoot();
-			this->mutiBulletsLayer->StartShoot();
-			this->bulletLayer->StartShoot(6.2f);
-		}
-	}
+    //enemy2 & airplane CheckCollosion
+    CCARRAY_FOREACH(this->_enemyLayer->_pAllEnemy2,et)
+    {
+        Enemy* enemy2 = (Enemy*) et;
+        if (enemy2->getLife() > 0)
+        {
+            if (airplaneRect.intersectsRect(enemy2->getBoundingBox()))
+            {
+                this->unscheduleAllSelectors();
+                this->_bulletLayer->StopShoot();
+                this->_mutiBulletsLayer->StopShoot();
+                this->_planeLayer->Blowup(_score);
+                return;
+            }
+        }
+    }
 
-	//bigBoom & airplane CheckCollision
-	CCARRAY_FOREACH(this->ufoLayer->m_pAllBigBoom,ut)
-	{
-		CCSprite* bigBoom=(CCSprite*)ut;
-		if (this->planeLayer->getChildByTag(AIRPLANE)->boundingBox().intersectsRect(bigBoom->boundingBox()))
-		{
-			CocosDenshion::SimpleAudioEngine::sharedEngine()->playEffect("sound/get_bomb.mp3");
-			this->ufoLayer->RemoveBigBoom(bigBoom);
-			bigBoomCount++;
-			updateBigBoomItem(bigBoomCount);
-		}
-	}
+    //enemy3 & airplane CheckCollosion
+    CCARRAY_FOREACH(this->_enemyLayer->_pAllEnemy3,et)
+    {
+        Enemy* enemy3 = (Enemy*) et;
+        if (enemy3->getLife() > 0)
+        {
+            if (airplaneRect.intersectsRect(enemy3->getBoundingBox()))
+            {
+                this->unscheduleAllSelectors();
+                this->_bulletLayer->StopShoot();
+                this->_mutiBulletsLayer->StopShoot();
+                this->_planeLayer->Blowup(_score);
+                return;
+            }
+        }
+    }
+
+    //mutiBullets & airplane CheckCollision
+    CCARRAY_FOREACH(this->_ufoLayer->_allMutiBullets,ut)
+    {
+        Sprite* mutiBullets = (Sprite*) ut;
+        if (this->_planeLayer->getChildByTag(AIRPLANE)->getBoundingBox().intersectsRect(
+                mutiBullets->getBoundingBox()))
+        {
+            CocosDenshion::SimpleAudioEngine::getInstance()->playEffect(
+                    "sound/get_double_laser.mp3");
+            this->_ufoLayer->RemoveMutiBullets(mutiBullets);
+            this->_bulletLayer->StopShoot();
+            this->_mutiBulletsLayer->StartShoot();
+            this->_bulletLayer->StartShoot(6.2f);
+        }
+    }
+
+    //bigBoom & airplane CheckCollision
+    CCARRAY_FOREACH(this->_ufoLayer->_allBigBoom,ut)
+    {
+        Sprite* bigBoom = (Sprite*) ut;
+        if (this->_planeLayer->getChildByTag(AIRPLANE)->getBoundingBox().intersectsRect(
+                bigBoom->getBoundingBox()))
+        {
+            CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("sound/get_bomb.mp3");
+            this->_ufoLayer->RemoveBigBoom(bigBoom);
+            _bigBoomCount++;
+            updateBigBoomItem(_bigBoomCount);
+        }
+    }
 }
 
 void GameLayer::updateBigBoomItem(int bigBoomCount)
 {
-	CCSprite* normalBomb=CCSprite::createWithSpriteFrame(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName("bomb.png"));
-	CCSprite* pressedBomb=CCSprite::createWithSpriteFrame(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName("bomb.png"));
-	if (bigBoomCount<0)
-	{
-		return;
-	}
-	else if (bigBoomCount==0)
-	{
-		if(this->getChildByTag(TAG_BIGBOOM_MENUITEM))
-		{
-			this->removeChildByTag(TAG_BIGBOOM_MENUITEM,true);
-		}
-		if (this->getChildByTag(TAG_BIGBOOMCOUNT_LABEL))
-		{
-			this->removeChildByTag(TAG_BIGBOOMCOUNT_LABEL,true);
-		}
-	}
-	else if (bigBoomCount==1)
-	{
-		//����bigBoomItemMenu
-		if (!this->getChildByTag(TAG_BIGBOOM_MENUITEM))
-		{
-			CCMenuItemImage* pBigBoomItem=CCMenuItemImage::create();
-			pBigBoomItem->initWithNormalSprite(normalBomb,pressedBomb,NULL,this,menu_selector(GameLayer::menuBigBoomCallback));
-			pBigBoomItem->setPosition(ccp(normalBomb->getContentSize().width/2+10,normalBomb->getContentSize().height/2+10));
-			menuBigBoom=CCMenu::create(pBigBoomItem,NULL);
-			menuBigBoom->setPosition(CCPointZero);
-			this->addChild(menuBigBoom,0,TAG_BIGBOOM_MENUITEM);
-		}
-		if (this->getChildByTag(TAG_BIGBOOMCOUNT_LABEL))
-		{
-			this->removeChildByTag(TAG_BIGBOOMCOUNT_LABEL,true);
-		}
-	}
-	else
-	{
-		if (!this->getChildByTag(TAG_BIGBOOM_MENUITEM))
-		{
-			CCMenuItemImage* pBigBoomItem=CCMenuItemImage::create();
-			pBigBoomItem->initWithNormalSprite(normalBomb,pressedBomb,NULL,this,menu_selector(GameLayer::menuBigBoomCallback));
-			pBigBoomItem->setPosition(ccp(normalBomb->getContentSize().width/2+10,normalBomb->getContentSize().height/2+10));
-			menuBigBoom=CCMenu::create(pBigBoomItem,NULL);
-			menuBigBoom->setPosition(CCPointZero);
-			this->addChild(menuBigBoom,0,TAG_BIGBOOM_MENUITEM);
-		}
-		if (this->getChildByTag(TAG_BIGBOOMCOUNT_LABEL))
-		{
-			this->removeChildByTag(TAG_BIGBOOMCOUNT_LABEL,true);
-		}
-		if (bigBoomCount>=0 && bigBoomCount<=MAX_BIGBOOM_COUNT)
-		{
-			__String* strScore=__String::createWithFormat("X%d",bigBoomCount);
-			bigBoomCountItem=CCLabelBMFont::create(strScore->_string.c_str(),"font/font.fnt");
-			bigBoomCountItem->setColor(ccc3(143,146,147));
-			bigBoomCountItem->setAnchorPoint(ccp(0,0.5));
-			bigBoomCountItem->setPosition(ccp(normalBomb->getContentSize().width+15,normalBomb->getContentSize().height/2+5));
-			this->addChild(bigBoomCountItem,0,TAG_BIGBOOMCOUNT_LABEL);
-		}
-	}
+    Sprite* normalBomb = Sprite::createWithSpriteFrame(
+            SpriteFrameCache::getInstance()->getSpriteFrameByName("bomb.png"));
+    Sprite* pressedBomb = Sprite::createWithSpriteFrame(
+            SpriteFrameCache::getInstance()->getSpriteFrameByName("bomb.png"));
+    if (bigBoomCount < 0)
+    {
+        return;
+    }
+    else if (bigBoomCount == 0)
+    {
+        if (this->getChildByTag(TAG_BIGBOOM_MENUITEM))
+        {
+            this->removeChildByTag(TAG_BIGBOOM_MENUITEM, true);
+        }
+        if (this->getChildByTag(TAG_BIGBOOMCOUNT_LABEL))
+        {
+            this->removeChildByTag(TAG_BIGBOOMCOUNT_LABEL, true);
+        }
+    }
+    else if (bigBoomCount == 1)
+    {
+
+        if (!this->getChildByTag(TAG_BIGBOOM_MENUITEM))
+        {
+            MenuItemImage* pBigBoomItem = MenuItemImage::create();
+            pBigBoomItem->setNormalImage(normalBomb);
+            pBigBoomItem->setSelectedImage(pressedBomb);
+            pBigBoomItem->setCallback(CC_CALLBACK_1(GameLayer::menuBigBoomCallback,this));
+
+            pBigBoomItem->setPosition(
+                    Point(normalBomb->getContentSize().width / 2 + 10,
+                            normalBomb->getContentSize().height / 2 + 10));
+            _menuBigBoom = Menu::create(pBigBoomItem, NULL);
+            _menuBigBoom->setPosition(Point::ZERO);
+            this->addChild(_menuBigBoom, 0, TAG_BIGBOOM_MENUITEM);
+        }
+        if (this->getChildByTag(TAG_BIGBOOMCOUNT_LABEL))
+        {
+            this->removeChildByTag(TAG_BIGBOOMCOUNT_LABEL, true);
+        }
+    }
+    else
+    {
+        if (!this->getChildByTag(TAG_BIGBOOM_MENUITEM))
+        {
+            MenuItemImage* pBigBoomItem = MenuItemImage::create();
+            pBigBoomItem->setNormalImage(normalBomb);
+            pBigBoomItem->setSelectedImage(pressedBomb);
+            pBigBoomItem->setCallback(CC_CALLBACK_1(GameLayer::menuBigBoomCallback,this));
+            pBigBoomItem->setPosition(
+                    Point(normalBomb->getContentSize().width / 2 + 10,
+                            normalBomb->getContentSize().height / 2 + 10));
+            _menuBigBoom = Menu::create(pBigBoomItem, NULL);
+            _menuBigBoom->setPosition(Point::ZERO);
+            this->addChild(_menuBigBoom, 0, TAG_BIGBOOM_MENUITEM);
+        }
+        if (this->getChildByTag(TAG_BIGBOOMCOUNT_LABEL))
+        {
+            this->removeChildByTag(TAG_BIGBOOMCOUNT_LABEL, true);
+        }
+        if (bigBoomCount >= 0 && bigBoomCount <= MAX_BIGBOOM_COUNT)
+        {
+            __String* strScore=__String::createWithFormat("X%d",bigBoomCount);
+            _bigBoomCountItem=LabelBMFont::create(strScore->_string.c_str(),"font/font.fnt");
+            _bigBoomCountItem->setColor(Color3B(143,146,147));
+            _bigBoomCountItem->setAnchorPoint(Point(0,0.5));
+            _bigBoomCountItem->setPosition(Point(normalBomb->getContentSize().width+15,normalBomb->getContentSize().height/2+5));
+            this->addChild(_bigBoomCountItem,0,TAG_BIGBOOMCOUNT_LABEL);
+        }
+    }
 }
 
-void GameLayer::menuBigBoomCallback(CCObject* pSender)
+void GameLayer::menuBigBoomCallback(Object* pSender)
 {
-	if(bigBoomCount>0 && !CCDirector::sharedDirector()->isPaused())
-	{
-		CocosDenshion::SimpleAudioEngine::sharedEngine()->playEffect("sound/use_bomb.mp3");
-		bigBoomCount--;
-		score+=this->enemyLayer->m_pAllEnemy1->count()*ENEMY1_SCORE;
-		score+=this->enemyLayer->m_pAllEnemy2->count()*ENEMY2_SCORE;
-		score+=this->enemyLayer->m_pAllEnemy3->count()*ENEMY3_SCORE;
-		this->enemyLayer->removeAllEnemy();
-		updateBigBoomItem(bigBoomCount);
-		this->controlLayer->updateScore(score);
-	}
-}
-
-void GameLayer::keyBackClicked()
-{
-	CCDirector::sharedDirector()->end();
+    if (_bigBoomCount > 0 && !Director::getInstance()->isPaused())
+    {
+        CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("sound/use_bomb.mp3");
+        _bigBoomCount--;
+        _score += this->_enemyLayer->_pAllEnemy1->count() * ENEMY1_SCORE;
+        _score += this->_enemyLayer->_pAllEnemy2->count() * ENEMY2_SCORE;
+        _score += this->_enemyLayer->_pAllEnemy3->count() * ENEMY3_SCORE;
+        this->_enemyLayer->removeAllEnemy();
+        updateBigBoomItem(_bigBoomCount);
+        this->_controlLayer->updateScore(_score);
+    }
 }
 
 Level GameLayer::getCurLevel()
 {
-	return level;
+    return s_level;
 }

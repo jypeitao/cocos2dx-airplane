@@ -1,53 +1,53 @@
 /*******************************************************************************
-	Author						: JackyFu
-	Email                   	: fusijie@vip.qq.com
-	QQ  						: 754505629
-	Blog						: http://blog.csdn.net/jackystudio
-	All Rights Reserved
-	
-	This piece of code does not have any registered copyright and is free to be 
-	used as necessary. The user is free to modify as per the requirements. As a
-	fellow developer, all that I expect and request for is to be given the 
-	credit for intially developing this reusable code by not removing my name as 
-	the author.
-*******************************************************************************/
+ Author						: JackyFu
+ Email                   	: fusijie@vip.qq.com
+ QQ  						: 754505629
+ Blog						: http://blog.csdn.net/jackystudio
+ All Rights Reserved
+
+ This piece of code does not have any registered copyright and is free to be
+ used as necessary. The user is free to modify as per the requirements. As a
+ fellow developer, all that I expect and request for is to be given the
+ credit for intially developing this reusable code by not removing my name as
+ the author.
+ *******************************************************************************/
 
 #pragma once
 
 #include "cocos2d.h"
 #include "SimpleAudioEngine.h"
-
 USING_NS_CC;
 
-class BulletLayer :
-	public CCLayer
+class BulletLayer: public Layer
 {
 public:
 
-	BulletLayer(void);
+    BulletLayer(void);
 
-	~BulletLayer(void);
+    ~BulletLayer(void);
 
-	CREATE_FUNC(BulletLayer);
+    CREATE_FUNC(BulletLayer);
 
-	virtual bool init();
+    virtual bool init();
 
-	void AddBullet(float dt);
+    void AddBullet(float dt);
 
-	void bulletMoveFinished(CCNode* pSender);
+    void bulletMoveFinished(Node* sender);
 
-	void RemoveBullet(CCSprite* bullet);
+    void RemoveBullet(Sprite* bullet);
 
-	void StartShoot(float delay=0.0f);
+    void StartShoot(float delay = 0.0f);
 
-	void StopShoot();
-	
+    void StopShoot();
+
+    std::function<void(Node *)> onAction;
+
 public:
 
-	CCArray* m_pAllBullet;
+    __Array* _allBullet;
 
-	//CCSpriteFrame* bulletSpriteFrame;
+    //SpriteFrame* bulletSpriteFrame;
 
-	CCSpriteBatchNode* bulletBatchNode;
+    SpriteBatchNode* _bulletBatchNode;
 
 };

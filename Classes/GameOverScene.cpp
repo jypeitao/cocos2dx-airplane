@@ -2,8 +2,8 @@
 
 GameOverScene::GameOverScene(void)
 {
-	gameOverLayer=NULL;
-	score=0;
+	_gameOverLayer=NULL;
+	_score=0;
 }
 
 GameOverScene::~GameOverScene(void)
@@ -14,7 +14,7 @@ GameOverScene::~GameOverScene(void)
 GameOverScene* GameOverScene::create(int passScore)
 {
 	GameOverScene *pRet = new GameOverScene(); 
-	pRet->score=passScore;
+	pRet->_score=passScore;
 	if (pRet && pRet->init()) 
 	{ 
 		pRet->autorelease(); 
@@ -33,10 +33,10 @@ bool GameOverScene::init()
 	bool bRet=false;
 	do 
 	{
-		CC_BREAK_IF(!CCScene::init());
+		CC_BREAK_IF(!Scene::init());
 
-		gameOverLayer=GameOverLayer::create(score);
-		this->addChild(gameOverLayer);
+		_gameOverLayer=GameOverLayer::create(_score);
+		this->addChild(_gameOverLayer);
 
 		bRet=true;
 	} while (0);

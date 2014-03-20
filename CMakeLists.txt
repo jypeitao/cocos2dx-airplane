@@ -41,9 +41,22 @@ endif()
 
 set(GAME_SRC
   proj.linux/main.cpp
-
+  Classes/AppDelegate.cpp
+  Classes/WelcomeLayer.cpp
+  Classes/WelcomeScene.cpp
+  Classes/GameScene.cpp
+  Classes/GameLayer.cpp
+  Classes/PlaneLayer.cpp
+  Classes/BulletLayer.cpp
+  Classes/EnemyLayer.cpp
+  Classes/Enemy.cpp
+  Classes/ControlLayer.cpp
+  Classes/UFOLayer.cpp
+  Classes/MutiBulletsLayer.cpp
+  Classes/GameOverLayer.cpp
+  Classes/GameOverScene.cpp
 )
-AUX_SOURCE_DIRECTORY(./Classes GAME_SRC)
+#AUX_SOURCE_DIRECTORY(./Classes GAME_SRC)
 
 set(COCOS2D_ROOT ${CMAKE_SOURCE_DIR}/cocos2d)
 

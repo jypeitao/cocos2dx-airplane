@@ -29,7 +29,7 @@ enum Level
 };
 
 class EnemyLayer :
-	public CCLayer
+	public Layer
 {
 public:
 	EnemyLayer(void);
@@ -39,33 +39,33 @@ public:
 	virtual bool init();
 
 	void addEnemy1(float dt);
-	void enemy1MoveFinished(CCNode* pSender);
+	void enemy1MoveFinished(Node* pSender);
 	void enemy1Blowup(Enemy* enemy1);
-	void removeEnemy1(CCNode* pTarget, void* data);
+	void removeEnemy1(Node* pTarget, void* data);
 	void removeAllEnemy1();
 
 	void addEnemy2(float dt);
-	void enemy2MoveFinished(CCNode* pSender);
+	void enemy2MoveFinished(Node* pSender);
 	void enemy2Blowup(Enemy* enemy2);
-	void removeEnemy2(CCNode* pTarget, void* data);
+	void removeEnemy2(Node* pTarget, void* data);
 	void removeAllEnemy2();
 
 	void addEnemy3(float dt);
-	void enemy3MoveFinished(CCNode* pSender);
+	void enemy3MoveFinished(Node* pSender);
 	void enemy3Blowup(Enemy* enemy3);
-	void removeEnemy3(CCNode* pTarget, void* data);
+	void removeEnemy3(Node* pTarget, void* data);
 	void removeAllEnemy3();
 	void removeAllEnemy();
 
-	CCArray* m_pAllEnemy1;
-	CCArray* m_pAllEnemy2;
-	CCArray* m_pAllEnemy3;
+	__Array* _pAllEnemy1;
+	__Array* _pAllEnemy2;
+	__Array* _pAllEnemy3;
 
 private:
-	CCSpriteFrame* enemy1SpriteFrame;
-	CCSpriteFrame* enemy2SpriteFrame;
-	CCSpriteFrame* enemy3SpriteFrame_1;
-	CCSpriteFrame* enemy3SpriteFrame_2;
+	SpriteFrame* _enemy1SpriteFrame;
+	SpriteFrame* _enemy2SpriteFrame;
+	SpriteFrame* _enemy3SpriteFrame_1;
+	SpriteFrame* _enemy3SpriteFrame_2;
 
 
 };

@@ -16,14 +16,14 @@
 #include "cocos2d.h"
 #include "SimpleAudioEngine.h"
 
-#include "NoTouchLayer.h"
+//#include "NoTouchLayer.h"
 
 USING_NS_CC;
 
 const int MAX_SCORE=1000000000;
 
 class ControlLayer :
-	public CCLayer
+	public Layer
 {
 public:
 
@@ -35,15 +35,15 @@ public:
 
 	CREATE_FUNC(ControlLayer);
 
-	void menuPauseCallback(CCObject* pSender);
+	void menuPauseCallback(Object* pSender);
 
 	void updateScore(int score);
 
 public:
 
-	CCLabelBMFont* scoreItem;
+	LabelBMFont* _scoreItem;
 
-	CCMenuItemImage* pPauseItem;
+	MenuItemImage* _pauseItem;
 
-	NoTouchLayer* noTouchLayer;
+	//NoTouchLayer* _noTouchLayer;
 };

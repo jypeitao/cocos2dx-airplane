@@ -32,7 +32,7 @@ public:
 
 	void menuBackCallback(Object* pSender);
 
-	virtual void keyBackClicked();
+	virtual void onKeyReleased(EventKeyboard::KeyCode keyCode, Event* event);
 
 	void beginChangeHighestScore(Node* pNode);
 
@@ -40,9 +40,9 @@ public:
 
 public:
 	
-	int score;
+	int _score;
 
-	static int highestHistoryScore;
+	static int s_highestHistoryScore;
 
-	CCLabelBMFont* highestScore;
+	LabelBMFont* _highestScore;
 };

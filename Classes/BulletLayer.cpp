@@ -4,16 +4,16 @@
 BulletLayer::BulletLayer(void)
 {
 	//bulletSpriteFrame=NULL;
-	bulletBatchNode=NULL;
+	_bulletBatchNode=NULL;
 
-	m_pAllBullet=CCArray::create();
-	m_pAllBullet->retain();
+	_allBullet=__Array::create();
+	_allBullet->retain();
 }
 
 BulletLayer::~BulletLayer(void)
 {
-	m_pAllBullet->release();
-	m_pAllBullet=NULL;
+	_allBullet->release();
+	_allBullet=NULL;
 }
 
 bool BulletLayer::init()
@@ -21,13 +21,14 @@ bool BulletLayer::init()
 	bool bRet=false;
 	do 
 	{
-		CC_BREAK_IF(!CCLayer::init());
+		CC_BREAK_IF(!Layer::init());
 
-		//bulletSpriteFrame=CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName("bullet1.png");
+		//bulletSpriteFrame=SpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName("bullet1.png");
 
-		CCTexture2D *texture = CCTextureCache::sharedTextureCache()->textureForKey("ui/shoot.png");
-		bulletBatchNode = CCSpriteBatchNode::createWithTexture(texture);
-		this->addChild(bulletBatchNode);
+
+		Texture2D *texture = Director::getInstance()->getTextureCache()->getTextureForKey("ui/shoot.png");
+		_bulletBatchNode = SpriteBatchNode::createWithTexture(texture);
+		this->addChild(_bulletBatchNode);
 
 		bRet=true;
 	} while (0);
@@ -36,7 +37,7 @@ bool BulletLayer::init()
 
 void BulletLayer::StartShoot(float delay)
 {
-	this->schedule(schedule_selector(BulletLayer::AddBullet),0.20f,kCCRepeatForever,delay);
+	this->schedule(schedule_selector(BulletLayer::AddBullet),0.20f,kRepeatForever,delay);
 }
 
 void BulletLayer::StopShoot()
@@ -46,40 +47,40 @@ void BulletLayer::StopShoot()
 
 void BulletLayer::AddBullet(float dt)
 {
-	CocosDenshion::SimpleAudioEngine::sharedEngine()->playEffect("sound/bullet.mp3");
-	CCSprite* bullet=CCSprite::createWithSpriteFrameName("bullet1.png");
-	bulletBatchNode->addChild(bullet);
+	CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("sound/bullet.mp3");
+	Sprite* bullet=Sprite::createWithSpriteFrameName("bullet1.png");
+	_bulletBatchNode->addChild(bullet);
 	//this->addChild(bullet);
-	this->m_pAllBullet->addObject(bullet);
+	this->_allBullet->addObject(bullet);
 
-	CCPoint planePosition=PlaneLayer::sharedPlane->getChildByTag(AIRPLANE)->getPosition();
-	CCPoint bulletPosition=ccp(planePosition.x,planePosition.y+PlaneLayer::sharedPlane->getChildByTag(AIRPLANE)->getContentSize().height/2);
+	Point planePosition=PlaneLayer::s_sharedPlane->getChildByTag(AIRPLANE)->getPosition();
+	Point bulletPosition=Point(planePosition.x,planePosition.y+PlaneLayer::s_sharedPlane->getChildByTag(AIRPLANE)->getContentSize().height/2);
 	bullet->setPosition(bulletPosition);
     
-	float length=CCDirector::sharedDirector()->getWinSize().height+bullet->getContentSize().height/2-bulletPosition.y;
+	float length=Director::getInstance()->getWinSize().height+bullet->getContentSize().height/2-bulletPosition.y;
 	float velocity=320/1;//320pixel/sec
 	float realMoveDuration=length/velocity;
 
-	CCFiniteTimeAction* actionMove=CCMoveTo::create(realMoveDuration,ccp(bulletPosition.x,CCDirector::sharedDirector()->getWinSize().height+bullet->getContentSize().height/2));
-	CCFiniteTimeAction* actionDone=CCCallFuncN::create(this,callfuncN_selector(BulletLayer::bulletMoveFinished));
+	FiniteTimeAction* actionMove=MoveTo::create(realMoveDuration,Point(bulletPosition.x,Director::getInstance()->getWinSize().height+bullet->getContentSize().height/2));
+	FiniteTimeAction* actionDone=CallFuncN::create(CC_CALLBACK_1(BulletLayer::bulletMoveFinished,this));
 
-	CCSequence* sequence=CCSequence::create(actionMove,actionDone,NULL);
+	Sequence* sequence=Sequence::create(actionMove,actionDone,NULL);
 	bullet->runAction(sequence);
 }
 
-void BulletLayer::bulletMoveFinished(CCNode* pSender)
+void BulletLayer::bulletMoveFinished(Node* pSender)
 {
-	CCSprite* bullet=(CCSprite*)pSender;
-	this->bulletBatchNode->removeChild(bullet,true);
-	this->m_pAllBullet->removeObject(bullet);
+	Sprite* bullet=(Sprite*)pSender;
+	this->_bulletBatchNode->removeChild(bullet,true);
+	this->_allBullet->removeObject(bullet);
 }
 
-void BulletLayer::RemoveBullet(CCSprite* bullet)
+void BulletLayer::RemoveBullet(Sprite* bullet)
 {
 	if (bullet!=NULL)
 	{
-		this->bulletBatchNode->removeChild(bullet,true);
-		this->m_pAllBullet->removeObject(bullet);
+		this->_bulletBatchNode->removeChild(bullet,true);
+		this->_allBullet->removeObject(bullet);
 	}
 }
 

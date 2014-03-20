@@ -2,8 +2,8 @@
 
 Enemy::Enemy(void)
 {
-	m_sprite=NULL;
-	m_life=0;
+	_sprite=NULL;
+	_life=0;
 }
 
 Enemy::~Enemy(void)
@@ -17,32 +17,32 @@ Enemy* Enemy::create()
 	return pRet;
 }
 
-void Enemy::bindSprite(CCSprite* sprite,int life)
+void Enemy::bindSprite(Sprite* sprite,int life)
 {
-	m_sprite=sprite;
-	m_life=life;
-	this->addChild(m_sprite);
+	_sprite=sprite;
+	_life=life;
+	this->addChild(_sprite);
 }
 
-CCSprite* Enemy::getSprite()
+Sprite* Enemy::getSprite()
 {
-	return m_sprite;
+	return _sprite;
 }
 
 int Enemy::getLife()
 {
-	return m_life;
+	return _life;
 }
 
 void Enemy::loseLife()
 {
-	m_life--;
+	_life--;
 }
 
-CCRect Enemy::getBoundingBox()
+Rect Enemy::getBoundingBox()
 {
-	CCRect rect=m_sprite->boundingBox();
-	CCPoint pos=this->convertToWorldSpace(rect.origin);
-	CCRect enemyRect(pos.x,pos.y,rect.size.width,rect.size.height);
+	Rect rect=_sprite->getBoundingBox();
+	Point pos=this->convertToWorldSpace(rect.origin);
+	Rect enemyRect(pos.x,pos.y,rect.size.width,rect.size.height);
 	return enemyRect;
 }

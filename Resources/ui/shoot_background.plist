@@ -7,15 +7,15 @@
             <key>background.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{2,856},{480,852}}</string>
+                <string>{{2,856},{480,850}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
                 <false/>
                 <key>sourceColorRect</key>
-                <string>{{0,0},{480,852}}</string>
+                <string>{{0,0},{480,850}}</string>
                 <key>sourceSize</key>
-                <string>{480,852}</string>
+                <string>{480,850}</string>
             </dict>
             <key>btn_finish.png</key>
             <dict>

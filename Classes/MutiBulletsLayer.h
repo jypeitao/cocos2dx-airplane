@@ -19,7 +19,7 @@
 USING_NS_CC;
 
 class MutiBulletsLayer :
-	public CCLayer
+	public Layer
 {
 public:
 	MutiBulletsLayer(void);
@@ -32,9 +32,9 @@ public:
 
 	void AddMutiBullets(float dt);
 
-	void mutiBulletsMoveFinished(CCNode* pSender);
+	void mutiBulletsMoveFinished(Node* pSender);
 
-	void RemoveMutiBullets(CCSprite* mutiBullets);
+	void RemoveMutiBullets(Sprite* mutiBullets);
 
 	void StartShoot();
 
@@ -42,9 +42,9 @@ public:
 
 public:
 
-	CCArray* m_pAllMutiBullets;
+	__Array* _allMutiBullets;
 
 	//CCSpriteFrame* mutiBulletsSpriteFrame;
 
-	CCSpriteBatchNode* mutiBullesBatchNode;
+	SpriteBatchNode* _mutiBullesBatchNode;
 };

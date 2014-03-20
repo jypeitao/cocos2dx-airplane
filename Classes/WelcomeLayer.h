@@ -32,7 +32,7 @@ public:
 
 	void loadingDone(Node* pNode);
 
-	virtual void keyBackClicked();
+	void onKeyReleased(EventKeyboard::KeyCode keyCode, Event* event);
 
 	bool isHaveSaveFile();
 

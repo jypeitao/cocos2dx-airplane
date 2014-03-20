@@ -19,7 +19,7 @@
 USING_NS_CC;
 
 class GameOverScene :
-	public CCScene
+	public Scene
 {
 public:
 
@@ -33,7 +33,7 @@ public:
 
 public:
 
-	GameOverLayer* gameOverLayer;
+	GameOverLayer* _gameOverLayer;
 
-	int score;
+	int _score;
 };

@@ -20,7 +20,7 @@ USING_NS_CC;
 const int AIRPLANE=747;
 
 class PlaneLayer :
-	public CCLayer
+	public Layer
 {
 public:
 
@@ -32,7 +32,7 @@ public:
 
 	virtual bool init();
 
-	void MoveTo(CCPoint location);
+	void MoveTo(Point location);
 
 	void Blowup(int passScore);
 
@@ -40,9 +40,9 @@ public:
 
 public:
 
-	static PlaneLayer* sharedPlane;
+	static PlaneLayer* s_sharedPlane;
 
-	bool isAlive;
+	bool _isAlive;
 
-	int score;
+	int _score;
 };

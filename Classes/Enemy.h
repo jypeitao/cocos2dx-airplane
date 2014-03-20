@@ -17,19 +17,19 @@
 USING_NS_CC;
 
 class Enemy :
-	public CCNode
+	public Node
 {
 public:
 	Enemy(void);
 	~Enemy(void);
 	static Enemy* create();
-	void bindSprite(CCSprite* sprite,int life);
-	CCSprite* getSprite();
+	void bindSprite(Sprite* sprite,int life);
+	Sprite* getSprite();
 	int getLife();
 	void loseLife();
-	CCRect getBoundingBox();
+	Rect getBoundingBox();
 
 private:
-	CCSprite* m_sprite;
-	int m_life;
+	Sprite* _sprite;
+	int _life;
 };

@@ -2,18 +2,18 @@
 
 UFOLayer::UFOLayer(void)
 {
-	m_pAllMutiBullets=CCArray::create();
-	m_pAllMutiBullets->retain();
-	m_pAllBigBoom=CCArray::create();
-	m_pAllBigBoom->retain();
+	_allMutiBullets=__Array::create();
+	_allMutiBullets->retain();
+	_allBigBoom=__Array::create();
+	_allBigBoom->retain();
 }
 
 UFOLayer::~UFOLayer(void)
 {
-	m_pAllMutiBullets->release();
-	m_pAllMutiBullets=NULL;
-	m_pAllBigBoom->release();
-	m_pAllBigBoom=NULL;
+	_allMutiBullets->release();
+	_allMutiBullets=NULL;
+	_allBigBoom->release();
+	_allBigBoom=NULL;
 }
 
 bool UFOLayer::init()
@@ -21,10 +21,10 @@ bool UFOLayer::init()
 	bool bRet=false;
 	do 
 	{
-		CC_BREAK_IF(!CCLayer::init());
+		CC_BREAK_IF(!Layer::init());
 
 		this->schedule(schedule_selector(UFOLayer::AddMutiBullets),20.0);
-		this->schedule(schedule_selector(UFOLayer::AddBigBoom),20.0,kCCRepeatForever,5.0);
+		this->schedule(schedule_selector(UFOLayer::AddBigBoom),20.0,kRepeatForever,5.0);
 		bRet=true;
 	} while (0);
 
@@ -33,77 +33,81 @@ bool UFOLayer::init()
 
 void UFOLayer::AddMutiBullets(float dt)
 {
-	CocosDenshion::SimpleAudioEngine::sharedEngine()->playEffect("sound/out_porp.mp3");
-	CCSprite* mutiBullets=CCSprite::createWithSpriteFrame(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName("ufo1.png"));
+    log("AddMutiBullets %f",dt);
+	CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("sound/out_porp.mp3");
+	Sprite* mutiBullets=Sprite::createWithSpriteFrame(SpriteFrameCache::getInstance()->getSpriteFrameByName("ufo1.png"));
 
-	CCSize mutiBlletsSize=mutiBullets->getContentSize();
-	CCSize winSize=CCDirector::sharedDirector()->getWinSize();
+	Size mutiBlletsSize=mutiBullets->getContentSize();
+	Size winSize=Director::getInstance()->getWinSize();
 	int minX=mutiBlletsSize.width/2;
 	int maxX=winSize.width-mutiBlletsSize.width/2;
 	int rangeX=maxX-minX;
 	int actualX=(rand()%rangeX)+minX;
 
-	mutiBullets->setPosition(ccp(actualX,winSize.height+mutiBlletsSize.height/2));
+	mutiBullets->setPosition(Point(actualX,winSize.height+mutiBlletsSize.height/2));
 	this->addChild(mutiBullets);
-	this->m_pAllMutiBullets->addObject(mutiBullets);
+	this->_allMutiBullets->addObject(mutiBullets);
 
-	CCMoveBy* move1 = CCMoveBy::create(0.5f, CCPointMake(0, -150));
-	CCMoveBy* move2 = CCMoveBy::create(0.3f, CCPointMake(0, 100));
-	CCMoveBy* move3 = CCMoveBy::create(1.0f, CCPointMake(0,0-winSize.height-mutiBlletsSize.height/2));
-	CCCallFuncN* moveDone = CCCallFuncN::create(this,callfuncN_selector(UFOLayer::mutiBulletsMoveFinished));
+	MoveBy* move1 = MoveBy::create(0.5f, Point(0, -150));
+	MoveBy* move2 = MoveBy::create(0.3f, Point(0, 100));
+	MoveBy* move3 = MoveBy::create(1.0f, Point(0,0-winSize.height-mutiBlletsSize.height/2));
+	CallFuncN* moveDone = CallFuncN::create(CC_CALLBACK_1(UFOLayer::mutiBulletsMoveFinished,this));
 
-	CCFiniteTimeAction* sequence = CCSequence::create(move1,move2,move3,moveDone,NULL);
+
+	FiniteTimeAction* sequence = Sequence::create(move1,move2,move3,moveDone,NULL);
 	mutiBullets->runAction(sequence);
 
 }
 
-void UFOLayer::mutiBulletsMoveFinished(CCNode* pSender)
+void UFOLayer::mutiBulletsMoveFinished(Node* pSender)
 {
-	CCSprite* mutiBullets=(CCSprite*)pSender;
-	this->removeChild(mutiBullets,true);//从屏幕中移除
-	this->m_pAllMutiBullets->removeObject(mutiBullets);//从数组中移除
+
+	Sprite* mutiBullets=(Sprite*)pSender;
+	this->removeChild(mutiBullets,true);
+	this->_allMutiBullets->removeObject(mutiBullets);
 }
 
 void UFOLayer::AddBigBoom(float dt)
 {
-	CocosDenshion::SimpleAudioEngine::sharedEngine()->playEffect("sound/out_porp.mp3");
-	CCSprite* bigBoom=CCSprite::createWithSpriteFrame(CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName("ufo2.png"));
+    log("AddBigBoom %f",dt);
+	CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("sound/out_porp.mp3");
+	Sprite* bigBoom=Sprite::createWithSpriteFrame(SpriteFrameCache::getInstance()->getSpriteFrameByName("ufo2.png"));
 
-	CCSize bigBoomSize=bigBoom->getContentSize();
-	CCSize winSize=CCDirector::sharedDirector()->getWinSize();
+	Size bigBoomSize=bigBoom->getContentSize();
+	Size winSize=Director::getInstance()->getWinSize();
 	int minX=bigBoomSize.width/2;
 	int maxX=winSize.width-bigBoomSize.width/2;
 	int rangeX=maxX-minX;
 	int actualX=(rand()%rangeX)+minX;
 
-	bigBoom->setPosition(ccp(actualX,winSize.height+bigBoomSize.height/2));
+	bigBoom->setPosition(Point(actualX,winSize.height+bigBoomSize.height/2));
 	this->addChild(bigBoom);
-	this->m_pAllBigBoom->addObject(bigBoom);
+	this->_allBigBoom->addObject(bigBoom);
 
-	CCMoveBy* move1 = CCMoveBy::create(0.5, CCPointMake(0, -150));
-	CCMoveBy* move2 = CCMoveBy::create(0.3, CCPointMake(0, 100));
-	CCMoveBy* move3 = CCMoveBy::create(1.0, CCPointMake(0,0-winSize.height-bigBoomSize.height/2));
-	CCCallFuncN* moveDone = CCCallFuncN::create(this,callfuncN_selector(UFOLayer::bigBoomMoveFinished));
+	MoveBy* move1 = MoveBy::create(0.5, Point(0, -150));
+	MoveBy* move2 = MoveBy::create(0.3, Point(0, 100));
+	MoveBy* move3 = MoveBy::create(1.0, Point(0,0-winSize.height-bigBoomSize.height/2));
+	CallFuncN* moveDone = CallFuncN::create(CC_CALLBACK_1(UFOLayer::bigBoomMoveFinished,this));
 
-	CCFiniteTimeAction* sequence = CCSequence::create(move1,move2,move3,moveDone,NULL);
+	FiniteTimeAction* sequence = Sequence::create(move1,move2,move3,moveDone,NULL);
 	bigBoom->runAction(sequence);
 }
 
-void UFOLayer::bigBoomMoveFinished(CCNode* pSender)
+void UFOLayer::bigBoomMoveFinished(Node* pSender)
 {
-	CCSprite* bigBoom=(CCSprite*)pSender;
+	Sprite* bigBoom=(Sprite*)pSender;
 	this->removeChild(bigBoom,true);
-	this->m_pAllBigBoom->removeObject(bigBoom);
+	this->_allBigBoom->removeObject(bigBoom);
 }
 
-void UFOLayer::RemoveMutiBullets(CCSprite* mutiBullets)
+void UFOLayer::RemoveMutiBullets(Sprite* mutiBullets)
 {
 	this->removeChild(mutiBullets,true);
-	this->m_pAllMutiBullets->removeObject(mutiBullets);
+	this->_allMutiBullets->removeObject(mutiBullets);
 }
 
-void UFOLayer::RemoveBigBoom(CCSprite* bigBoom)
+void UFOLayer::RemoveBigBoom(Sprite* bigBoom)
 {
 	this->removeChild(bigBoom,true);
-	this->m_pAllBigBoom->removeObject(bigBoom);
+	this->_allBigBoom->removeObject(bigBoom);
 }

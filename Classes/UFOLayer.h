@@ -19,7 +19,7 @@
 USING_NS_CC;
 
 class UFOLayer :
-	public CCLayer
+	public Layer
 {
 public:
 
@@ -33,21 +33,21 @@ public:
 
 	void AddMutiBullets(float dt);
 
-	void mutiBulletsMoveFinished(CCNode* pSender);
+	void mutiBulletsMoveFinished(Node* pSender);
 
 	void AddBigBoom(float dt);
 
-	void bigBoomMoveFinished(CCNode* pSender);
+	void bigBoomMoveFinished(Node* pSender);
 
-	void RemoveMutiBullets(CCSprite* mutiBullets);
+	void RemoveMutiBullets(Sprite* mutiBullets);
 
-	void RemoveBigBoom(CCSprite* bigBoom);
+	void RemoveBigBoom(Sprite* bigBoom);
 
 public:
 
-	CCArray* m_pAllMutiBullets;
+	__Array* _allMutiBullets;
 
-	CCArray* m_pAllBigBoom;
+	__Array* _allBigBoom;
 
 };
 

@@ -4,16 +4,16 @@
 MutiBulletsLayer::MutiBulletsLayer(void)
 {
 	//mutiBulletsSpriteFrame=NULL;
-	mutiBullesBatchNode=NULL;
+	_mutiBullesBatchNode=NULL;
 
-	m_pAllMutiBullets=CCArray::create();
-	m_pAllMutiBullets->retain();
+	_allMutiBullets=__Array::create();
+	_allMutiBullets->retain();
 }
 
 MutiBulletsLayer::~MutiBulletsLayer(void)
 {
-	m_pAllMutiBullets->release();
-	m_pAllMutiBullets=NULL;
+	_allMutiBullets->release();
+	_allMutiBullets=NULL;
 }
 
 bool MutiBulletsLayer::init()
@@ -21,13 +21,13 @@ bool MutiBulletsLayer::init()
 	bool bRet=false;
 	do 
 	{
-		CC_BREAK_IF(!CCLayer::init());
+		CC_BREAK_IF(!Layer::init());
 
-		//mutiBulletsSpriteFrame=CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName("bullet2.png");
+		//mutiBulletsSpriteFrame=SpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName("bullet2.png");
 
-		CCTexture2D *texture = CCTextureCache::sharedTextureCache()->textureForKey("ui/shoot.png");
-		mutiBullesBatchNode = CCSpriteBatchNode::createWithTexture(texture);
-		this->addChild(mutiBullesBatchNode);
+		Texture2D *texture = Director::getInstance()->getTextureCache()->getTextureForKey("ui/shoot.png");
+		_mutiBullesBatchNode = SpriteBatchNode::createWithTexture(texture);
+		this->addChild(_mutiBullesBatchNode);
 
 		bRet=true;
 	} while (0);
@@ -46,50 +46,52 @@ void MutiBulletsLayer::StopShoot()
 
 void MutiBulletsLayer::AddMutiBullets(float dt)
 {
-	CocosDenshion::SimpleAudioEngine::sharedEngine()->playEffect("sound/bullet.mp3");
+	CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("sound/bullet.mp3");
 
-	CCSprite* bulletLeft=CCSprite::createWithSpriteFrameName("bullet2.png");
-	CCSprite* bulletRight=CCSprite::createWithSpriteFrameName("bullet2.png");
-	mutiBullesBatchNode->addChild(bulletLeft);
-	mutiBullesBatchNode->addChild(bulletRight);
-	this->m_pAllMutiBullets->addObject(bulletLeft);
-	this->m_pAllMutiBullets->addObject(bulletRight);
+	Sprite* bulletLeft=Sprite::createWithSpriteFrameName("bullet2.png");
+	Sprite* bulletRight=Sprite::createWithSpriteFrameName("bullet2.png");
+	_mutiBullesBatchNode->addChild(bulletLeft);
+	_mutiBullesBatchNode->addChild(bulletRight);
+	this->_allMutiBullets->addObject(bulletLeft);
+	this->_allMutiBullets->addObject(bulletRight);
 
-	CCPoint planePosition=PlaneLayer::sharedPlane->getChildByTag(AIRPLANE)->getPosition();
-	CCPoint bulletLeftPosition=ccp(planePosition.x-33,planePosition.y+35);
-	CCPoint bulletRightPosition=ccp(planePosition.x+33,planePosition.y+35);
+	Point planePosition=PlaneLayer::s_sharedPlane->getChildByTag(AIRPLANE)->getPosition();
+	Point bulletLeftPosition=Point(planePosition.x-33,planePosition.y+35);
+	Point bulletRightPosition=Point(planePosition.x+33,planePosition.y+35);
 	bulletLeft->setPosition(bulletLeftPosition);
 	bulletRight->setPosition(bulletRightPosition);
 
-	float length=CCDirector::sharedDirector()->getWinSize().height+bulletLeft->getContentSize().height/2-bulletLeftPosition.y;
+	float length=Director::getInstance()->getWinSize().height+bulletLeft->getContentSize().height/2-bulletLeftPosition.y;
 	float velocity=420/1;//420pixel/sec
 	float realMoveDuration=length/velocity;
 
-	CCFiniteTimeAction* actionLeftMove=CCMoveTo::create(realMoveDuration,ccp(bulletLeftPosition.x,CCDirector::sharedDirector()->getWinSize().height+bulletLeft->getContentSize().height/2));
-	CCFiniteTimeAction* actionLeftDone=CCCallFuncN::create(this,callfuncN_selector(MutiBulletsLayer::mutiBulletsMoveFinished));
-	CCSequence* sequenceLeft=CCSequence::create(actionLeftMove,actionLeftDone,NULL);
+	FiniteTimeAction* actionLeftMove=MoveTo::create(realMoveDuration,Point(bulletLeftPosition.x,Director::getInstance()->getWinSize().height+bulletLeft->getContentSize().height/2));
+	FiniteTimeAction* actionLeftDone=CallFuncN::create(CC_CALLBACK_1(MutiBulletsLayer::mutiBulletsMoveFinished,this));
+
+	Sequence* sequenceLeft=Sequence::create(actionLeftMove,actionLeftDone,NULL);
 	
-	CCFiniteTimeAction* actionRightMove=CCMoveTo::create(realMoveDuration,ccp(bulletRightPosition.x,CCDirector::sharedDirector()->getWinSize().height+bulletRight->getContentSize().height/2));
-	CCFiniteTimeAction* actionRightDone=CCCallFuncN::create(this,callfuncN_selector(MutiBulletsLayer::mutiBulletsMoveFinished));
-	CCSequence* sequenceRight=CCSequence::create(actionRightMove,actionRightDone,NULL);
+	FiniteTimeAction* actionRightMove=MoveTo::create(realMoveDuration,Point(bulletRightPosition.x,Director::getInstance()->getWinSize().height+bulletRight->getContentSize().height/2));
+	FiniteTimeAction* actionRightDone=CallFuncN::create(CC_CALLBACK_1(MutiBulletsLayer::mutiBulletsMoveFinished,this));
+
+	Sequence* sequenceRight=Sequence::create(actionRightMove,actionRightDone,NULL);
 
 	bulletLeft->runAction(sequenceLeft);
 	bulletRight->runAction(sequenceRight);
 }
 
-void MutiBulletsLayer::mutiBulletsMoveFinished(CCNode* pSender)
+void MutiBulletsLayer::mutiBulletsMoveFinished(Node* pSender)
 {
-	CCSprite* mutiBullets=(CCSprite*)pSender;
-	m_pAllMutiBullets->removeObject(mutiBullets);
-	this->mutiBullesBatchNode->removeChild(mutiBullets,true);
-	CCLog("MutiBUlletsCount=%d",m_pAllMutiBullets->count());
+	Sprite* mutiBullets=(Sprite*)pSender;
+	_allMutiBullets->removeObject(mutiBullets);
+	this->_mutiBullesBatchNode->removeChild(mutiBullets,true);
+	log("MutiBUlletsCount=%ld",_allMutiBullets->count());
 }
 
-void MutiBulletsLayer::RemoveMutiBullets(CCSprite* mutiBullets)
+void MutiBulletsLayer::RemoveMutiBullets(Sprite* mutiBullets)
 {
 	if (mutiBullets!=NULL)
 	{
-		this->m_pAllMutiBullets->removeObject(mutiBullets);
-		this->mutiBullesBatchNode->removeChild(mutiBullets,true);
+		this->_allMutiBullets->removeObject(mutiBullets);
+		this->_mutiBullesBatchNode->removeChild(mutiBullets,true);
 	}
 }
